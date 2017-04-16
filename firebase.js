@@ -41,20 +41,20 @@ function getArticlesByJSON(jsonString) {
 /* Query articles greater than popularity ordered by date */
 function getArticlesGreaterThanPopularity(popularity) {
   var result = [];
-	var p = database.ref('articles').orderByChild('popularity').startAt(popularity).once('value').then(function(snapshot) {
+	return database.ref('articles').orderByChild('popularity').startAt(popularity).once('value').then(function(snapshot) {
       if (snapshot.exists()) {
-        var popularArticles = snapshot.val();
+        result = snapshot.val();
+        var popularArticles = [];
+        for (var key in result) {
+            popularArticles.push(result[key]);
+        }
         var sorted = popularArticles.sort(function(a, b) {
             return parseFloat(b.publishedAt) - parseFloat(a.publishedAt);
         });
-        sorted.forEach(function(a) {
-          result.push(a);
-        });
+        return sorted;
       }
+      return {}
 	});
-  return p.then(function() {
-    return result;
-  });
 }
 
 /* Get all sources */

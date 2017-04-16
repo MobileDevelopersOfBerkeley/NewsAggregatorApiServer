@@ -58,6 +58,20 @@ function getArticlesGreaterThanPopularity(popularity) {
 	});
 }
 
+function getArticlesBySources(sources) {
+  var plist = [];
+  for (var i = 0; i < sources.length; i++) {
+    plist.push(queryArticles({"source" : sources[i]}));
+  }
+  return Promise.all(plist).then(function(result) {
+    var articles = [];
+    for (var i = 0; i < result.length; i++) {
+      articles.push.apply(articles, result[i]);
+    }
+    return articles;
+  });
+}
+
 /* Get all sources */
 function getAllSources() {
   var result = [];
@@ -110,6 +124,12 @@ router.post("/queryArticles", function(req, res) {
 
 router.post("/getArticlesGreaterThanPopularity", function(req, res) {
   var p =getArticlesGreaterThanPopularity(req.body.popularity);
+  _wrapPromise(p, res);
+});
+
+router.post("/getArticlesBySources", function(req, res) {
+  var sources = JSON.parse(req.body.sources);
+  var p = getArticlesBySources(sources);
   _wrapPromise(p, res);
 });
 

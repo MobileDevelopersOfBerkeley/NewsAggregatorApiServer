@@ -10,40 +10,41 @@ admin.initializeApp({
 
 var database = admin.database();
 
-/* Query by JSON dictionary 
+/* Returns articles that match params
    Example Input: '{popularity: 1, date: "10-20-2017", source: "CNN", topic: "politics"}'
 */
-function getArticlesByJSON(jsonString) {
-	var obj = JSON.parse(jsonString);
-	var keys = Object.keys(obj);
-  var indexes = [];
-  var result = [];
-  var plist = [];
-  keys.forEach(function(key) {
-    var p = database.ref('articles').orderByChild(key).equalTo(obj[key]).once('value').then(function(snapshot) {
-      if (snapshot.exists()) {
-        snapshot.forEach(function(childSnapshot) {
-          if (!indexes.includes(childSnapshot.key)) {
-            var obj = childSnapshot.val();
-            result.push(obj);
-            indexes.push(childSnapshot.key);
-          }
-        });
+function queryArticles(params) {
+  var satisfiesQuery = function(article, params) {
+    for (var key in params) {
+      if (article[key] != params[key]) {
+        return false;
       }
-    });
-    plist.push(p);
-  });
-  return Promise.all(plist).then(function() {
-    return result;
+    }
+    return true;
+  }
+  return database.ref("articles").orderByChild("date").once("value").then(function(snapshot) {
+    if (snapshot.exists()) {
+      unfiltered = snapshot.val();
+      filtered = [];
+      for (var key in unfiltered) {
+        if (satisfiesQuery(unfiltered[key], params)) {
+          filtered.push(unfiltered[key]);
+        }
+      }
+      return filtered;
+    }
+    return []
   });
 }
 
 /* Query articles greater than popularity ordered by date */
 function getArticlesGreaterThanPopularity(popularity) {
   var result = [];
+  popularity = parseInt(popularity);
 	return database.ref('articles').orderByChild('popularity').startAt(popularity).once('value').then(function(snapshot) {
       if (snapshot.exists()) {
         result = snapshot.val();
+        console.log(result);
         var popularArticles = [];
         for (var key in result) {
             popularArticles.push(result[key]);
@@ -102,6 +103,11 @@ router.post("/getArticlesByJSON", function(req, res) {
   _wrapPromise(p, res);
 });
 
+router.post("/queryArticles", function(req, res) {
+  var p = queryArticles(req.body);
+  _wrapPromise(p, res);
+});
+
 router.post("/getArticlesGreaterThanPopularity", function(req, res) {
   var p =getArticlesGreaterThanPopularity(req.body.popularity);
   _wrapPromise(p, res);
@@ -118,4 +124,3 @@ router.post("/getAllTopics", function(req, res) {
 });
 
 module.exports = router;
-

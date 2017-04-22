@@ -68,6 +68,9 @@ function getArticlesBySources(sources) {
     for (var i = 0; i < result.length; i++) {
       articles.push.apply(articles, result[i]);
     }
+    articles.sort(function(a, b) {
+      return a.popularity - b.popularity;
+    });
     return articles;
   });
 }

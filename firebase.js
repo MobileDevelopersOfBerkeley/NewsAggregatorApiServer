@@ -72,7 +72,17 @@ function getArticlesBySources(sources) {
   });
 }
 
-/* Get all sources */
+/* Get articles. TODO: implement parameters to filter */
+function getSources() {
+  return database.ref('sources').once('value').then(function(snapshot) {
+	if (snapshot.exists()) {
+      var sources = snapshot.val();
+      return sources;
+    }
+  });
+}
+
+/* Get all sources. DO NOT USE, THIS IS DEPRECATED */
 function getAllSources() {
   var result = [];
   var p = database.ref('allSources').once('value').then(function(snapshot) {
@@ -135,6 +145,11 @@ router.post("/getArticlesBySources", function(req, res) {
 
 router.post("/getAllSources", function(req, res) {
   var p = getAllSources();
+    _wrapPromise(p, res);
+});
+
+router.post("/getSources", function(req, res) {
+  var p = getSources();
     _wrapPromise(p, res);
 });
 

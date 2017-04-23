@@ -39,8 +39,13 @@ function queryArticles(params) {
   };
   return database.ref("articles").orderByChild("date").once("value").then(function(snapshot) {
     if (snapshot.exists()) {
-      unfiltered = snapshot.val();
-      filtered = [];
+      var unfiltered = snapshot.val();
+      var filtered = [];
+      var do_sanitize = false;
+      if ("sanitize" in params) {
+        do_sanitize = params.sanitize;
+        delete params.sanitize;
+      }
       for (var key in unfiltered) {
         if (satisfiesQuery(unfiltered[key], params)) {
           filtered.push(unfiltered[key]);
@@ -50,7 +55,7 @@ function queryArticles(params) {
         return b.popularity - a.popularity;
       });
       // adds element of randomness, sends less articles to decrease data transfer
-      if (params.sanitize) {
+      if (do_sanitize) {
         filtered = sanitize(filtered);
       }
       return filtered;
@@ -79,7 +84,7 @@ function getArticlesGreaterThanPopularity(popularity) {
 	});
 }
 
-function getArticlesBySources(sources, sanitize) {
+function getArticlesBySources(sources, do_sanitize) {
   var plist = [];
   for (var i = 0; i < sources.length; i++) {
     plist.push(queryArticles({"source" : sources[i]}));
@@ -92,7 +97,7 @@ function getArticlesBySources(sources, sanitize) {
     articles.sort(function(a, b) {
       return b.popularity - a.popularity;
     });
-    if (sanitize) {
+    if (do_sanitize) {
       articles = sanitize(articles);
     }
     return articles;

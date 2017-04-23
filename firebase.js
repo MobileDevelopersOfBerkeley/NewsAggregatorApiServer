@@ -10,6 +10,21 @@ admin.initializeApp({
 
 var database = admin.database();
 
+// Sanitizes articles. Limits sizes and shuffles for better popularity spread.
+var sanitize = function(articles) {
+  // LET THE FATES DECIDE
+  var DISPLAY_LIMIT = 30;
+  for (var i = 0; i < DISPLAY_LIMIT; i++) {
+    var display_index = Math.floor(DISPLAY_LIMIT * Math.random());
+    var other_index = Math.floor(articles.length * Math.random());
+    console.log(other_index);
+    var tmp = articles[display_index];
+    articles[display_index] = articles[other_index];
+    articles[other_index] = tmp;
+  }
+  return articles.slice(0, DISPLAY_LIMIT);
+};
+
 /* Returns articles that match params
    Example Input: '{popularity: 1, date: "10-20-2017", source: "CNN", topic: "politics"}'
 */
@@ -34,6 +49,10 @@ function queryArticles(params) {
       filtered.sort(function(a, b) {
         return b.popularity - a.popularity;
       });
+      // adds element of randomness, sends less articles to decrease data transfer
+      if (params.sanitize) {
+        sanitize(filtered);
+      }
       return filtered;
     }
     return [];
@@ -47,7 +66,6 @@ function getArticlesGreaterThanPopularity(popularity) {
 	return database.ref('articles').orderByChild('popularity').startAt(popularity).once('value').then(function(snapshot) {
       if (snapshot.exists()) {
         result = snapshot.val();
-        console.log(result);
         var popularArticles = [];
         for (var key in result) {
             popularArticles.push(result[key]);
@@ -61,7 +79,7 @@ function getArticlesGreaterThanPopularity(popularity) {
 	});
 }
 
-function getArticlesBySources(sources) {
+function getArticlesBySources(sources, sanitize) {
   var plist = [];
   for (var i = 0; i < sources.length; i++) {
     plist.push(queryArticles({"source" : sources[i]}));
@@ -74,6 +92,9 @@ function getArticlesBySources(sources) {
     articles.sort(function(a, b) {
       return b.popularity - a.popularity;
     });
+    if (sanitize) {
+      sanitize(articles);
+    }
     return articles;
   });
 }
@@ -146,7 +167,7 @@ router.post("/getArticlesGreaterThanPopularity", function(req, res) {
 router.post("/getArticlesBySources", function(req, res) {
   console.log(req.body);
   var sources = JSON.parse(req.body.sources);
-  var p = getArticlesBySources(sources);
+  var p = getArticlesBySources(sources, req.body.sanitize);
   _wrapPromise(p, res);
 });
 

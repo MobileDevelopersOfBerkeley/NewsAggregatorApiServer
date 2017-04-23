@@ -21,7 +21,7 @@ function queryArticles(params) {
       }
     }
     return true;
-  }
+  };
   return database.ref("articles").orderByChild("date").once("value").then(function(snapshot) {
     if (snapshot.exists()) {
       unfiltered = snapshot.val();
@@ -31,9 +31,12 @@ function queryArticles(params) {
           filtered.push(unfiltered[key]);
         }
       }
+      filtered.sort(function(a, b) {
+        return a.popularity - b.popularity;
+      });
       return filtered;
     }
-    return []
+    return [];
   });
 }
 
@@ -54,7 +57,7 @@ function getArticlesGreaterThanPopularity(popularity) {
         });
         return sorted;
       }
-      return {}
+      return {};
 	});
 }
 
@@ -141,6 +144,7 @@ router.post("/getArticlesGreaterThanPopularity", function(req, res) {
 });
 
 router.post("/getArticlesBySources", function(req, res) {
+  console.log(req.body);
   var sources = JSON.parse(req.body.sources);
   var p = getArticlesBySources(sources);
   _wrapPromise(p, res);

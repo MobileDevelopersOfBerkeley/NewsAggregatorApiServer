@@ -14,10 +14,10 @@ var database = admin.database();
 var sanitize = function(articles) {
   // LET THE FATES DECIDE
   var DISPLAY_LIMIT = 30;
-  for (var i = 0; i < DISPLAY_LIMIT; i++) {
-    var display_index = Math.floor(DISPLAY_LIMIT * Math.random());
+  var max_iterations = Math.min(articles.length, DISPLAY_LIMIT);
+  for (var i = 0; i < max_iterations; i++) {
+    var display_index = Math.floor(max_iterations * Math.random());
     var other_index = Math.floor(articles.length * Math.random());
-    console.log(other_index);
     var tmp = articles[display_index];
     articles[display_index] = articles[other_index];
     articles[other_index] = tmp;
@@ -51,7 +51,7 @@ function queryArticles(params) {
       });
       // adds element of randomness, sends less articles to decrease data transfer
       if (params.sanitize) {
-        sanitize(filtered);
+        filtered = sanitize(filtered);
       }
       return filtered;
     }
@@ -93,7 +93,7 @@ function getArticlesBySources(sources, sanitize) {
       return b.popularity - a.popularity;
     });
     if (sanitize) {
-      sanitize(articles);
+      articles = sanitize(articles);
     }
     return articles;
   });

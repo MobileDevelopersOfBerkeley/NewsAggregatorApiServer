@@ -32,7 +32,7 @@ function queryArticles(params) {
         }
       }
       filtered.sort(function(a, b) {
-        return a.popularity - b.popularity;
+        return b.popularity - a.popularity;
       });
       return filtered;
     }
@@ -72,7 +72,7 @@ function getArticlesBySources(sources) {
       articles.push.apply(articles, result[i]);
     }
     articles.sort(function(a, b) {
-      return a.popularity - b.popularity;
+      return b.popularity - a.popularity;
     });
     return articles;
   });
